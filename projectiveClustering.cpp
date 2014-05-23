@@ -3,5 +3,5 @@
 
 int main(){
 
-    std::cout<< "narazie nie ma tu nic ciekawego\n";
+    std::cout<< "kompletnie nie ma tu nic ciekawego\n";
 }
