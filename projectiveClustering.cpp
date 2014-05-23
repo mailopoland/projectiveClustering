@@ -1,4 +1,5 @@
 #include <iostream>
+#include "projectiveClustering.hpp"
 
 int main(){
 
