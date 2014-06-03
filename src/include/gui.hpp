@@ -13,15 +13,19 @@ public:
 
 
 private slots:
-    void open();
-    void save();
-    //void quit();
     void loadImg();
+
+    //use them in future, now very simplified
+    //void open();
+    //void save();
+    //void quit();
 
 
 private:
     //******WIDGETY******//
-    QWidget *mainWin;
+    QImage *originImg;
+
+    QWidget *mainWid;
 
     QPushButton *openImgBut;
     QPushButton *quitBut;
