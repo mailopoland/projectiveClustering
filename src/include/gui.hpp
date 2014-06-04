@@ -14,7 +14,8 @@ public:
 
 private slots:
     void loadImg();
-
+    void toBinImg();
+    void toClusterImg();
     //use them in future, now very simplified
     //void open();
     //void save();
@@ -23,21 +24,27 @@ private slots:
 
 private:
     //******WIDGETY******//
-    QImage *originImg;
+    QImage originImg;
+    QImage binImg;
 
-    QWidget *mainWid;
+    QWidget *mainWid{ new QWidget };
 
-    QPushButton *openImgBut;
-    QPushButton *quitBut;
+    QPushButton *openBut { new QPushButton( tr( "&Open" ) ) };
+    QPushButton *quitBut{ new QPushButton( tr( "&Quit" ) ) };
+    QPushButton *binarizeBut{ new QPushButton( tr( "&Binarize" ) ) };
+    QPushButton *clusterBut{ new QPushButton( tr( "&Cluster" ) ) };
+
+
+    QVBoxLayout *mainLay { new QVBoxLayout };
+    QLabel *imgLab { new QLabel( tr("Your Image to Process" ) ) };
+
     
-    QVBoxLayout *mainLay;
-    QLabel *imgLab;
+    //@TODO add window QMenu and QActions
+    //QAction *openAct;
+    //QAction *saveAct;
+    //QAction *exitAct;
 
-    QAction *openAct;
-    QAction *saveAct;
-    QAction *exitAct;
-
-    QMenu *fileMenu;
+    //QMenu *fileMenu;
 };
 
 #endif
