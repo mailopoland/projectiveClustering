@@ -46,10 +46,13 @@ OBJECTS_DIR   = ./
 ####### Files
 
 SOURCES       = src/main.cpp \
-		src/gui.cpp moc_gui.cpp
+		src/gui.cpp \
+		moc_gui.cpp \
+		src/ClusteringHelper.cpp
 OBJECTS       = main.o \
 		gui.o \
-		moc_gui.o
+		moc_gui.o \
+		Cl
 DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/common/shell-unix.conf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/common/unix.conf \
