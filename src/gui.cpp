@@ -3,7 +3,10 @@
 #include <cmath>
 #include <list>
 #include <iostream>
+#include <Eigen/Dense>
+#include <Eigen/Eigenvalues>
 
+using namespace Eigen;
 using namespace std;
 
 
@@ -202,7 +205,7 @@ void WindowGUI::toClusterImg(){
     //@begin standard clastering steps:
     //(1) find k random points
     point * randPoints[k]; //randPoints for each clusters
-    qDebug() << "Finding random points... ";
+    qDebug()  << "Finding random points... ";
     ClusteringHelper::findRandPoints( k , curList, curSize, randPoints);
     /*
     //for debug/test:
@@ -219,7 +222,7 @@ void WindowGUI::toClusterImg(){
         double min = 1.79769e+308; //max value of double
         unsigned int clusterIndex;
         //check dist between all clusters selected point
-        for( unsigned int clusterIt ; clusterIt < k ; clusterIt++ ){
+        for( unsigned int clusterIt = 0; clusterIt < k ; clusterIt++ ){
             double actCheckVal = ClusteringHelper::pointsDestNormal( *listIt, randPoints[clusterIt]);
             if( actCheckVal < min ){
                 min = actCheckVal;
@@ -227,13 +230,16 @@ void WindowGUI::toClusterImg(){
             }
         }
         //save point to correct cluster
+        //qDebug() << "a point: x=" << (*listIt)->x << ", y=" << (*listIt)->y;
+        //qDebug() << "min=" << min;
         clusters[clusterIndex].push_front(*listIt);
     }
     qDebug() << "Finished: Match points to the nearest cluster";
-    /*
+
     //for debug/test:
     int clSize = 0;
     for( int i = 0; i < k ; i++){
+        qDebug() << "Cluster nr: "  << i << ", size=" << (int)clusters[i].size();
         clSize += (int)clusters[i].size();
     }
     if( clSize == curSize ){
@@ -243,8 +249,22 @@ void WindowGUI::toClusterImg(){
         qDebug() << "incorrect sum of size of all clusters!";
         qDebug() << "expected (curSize):" << curSize << " actual(clSize):" << clSize;
     }
-    */
 
-    //FIRST STEP OF PROJECTIVE PART
+
+    //PROJECTIVE PART
+    //(1) get average of clusters
+    qDebug() << "Getting average, covariance matrix (and it's eigenvectors) of clusters...";
+    Matrix<double,2,1> avgCl[k];
+    Matrix<double,2,2> coverations[k];
+    Matrix<double,2,2> eigenvectors[k];
+    for( unsigned i = 0 ; i < k ; i++ ){
+        qDebug() << "Getting average...";
+        avgCl[i] = ClusteringHelper::getAverage(clusters[i]);
+        qDebug() << "Getting coverations...";
+        coverations[i] = ClusteringHelper::getCovarianceMatrix(clusters[i], avgCl[i]);
+        qDebug() << "Getting eigenvalues...";
+        eigenvectors[i] = ClusteringHelper::getEigenvectors(coverations[i]);
+    }
+    qDebug() << "Finished: Getting average, covariance matrix (and it's eigenvectors) of clusters";
 
 }
