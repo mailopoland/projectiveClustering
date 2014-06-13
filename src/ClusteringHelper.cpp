@@ -122,19 +122,20 @@ double ClusteringHelper::dist( const double w[], point * pointCur, Matrix<double
     double result = 0;
     //point avgP ;
    // qDebug() << "start";
-    double a1 = avg[0,0];
-   // qDebug() << "avg1=" << a1;
-    double a2 = avg[0,1];
-   // qDebug() << "avg2=" << a2;
+    double a1 = avg[0];
+    //qDebug() << "avg1=" << a1;
+    double a2 = avg[1];
+    //qDebug() << "avg2=" << a2;
+    //cin.get();
     point * avgP = new point( a1, a2 );
     double v11 = vectors(0,0);
    // qDebug() << "v11=" << v11 ;
-    double v12 = vectors(0,1);
+    double v12 = vectors(0,1); //to zawsze 0 why?
   //  qDebug() << "v12=" << v12 ;
     double v21 = vectors(1,0);
   //  qDebug() << "v21=" << v21 ;
     double v22 = vectors(1,1);
-   // qDebug() << "v22=" << v11 ;
+   // qDebug() << "v22=" << v11 ; //to zawsze 0 why?
     point * v1 = new point( v11, v12 );
     point * v2 = new point( v21, v22 );
    // qDebug() << "p2";
@@ -143,6 +144,15 @@ double ClusteringHelper::dist( const double w[], point * pointCur, Matrix<double
     double helpF1 = mathFunc( xMINUSm, v1); //<point-avgP,v1>^2
     double helpF2 = mathFunc( xMINUSm, v2); //<point-avgP,v2>^2
     result = w[0] * helpDist + w[1] * (helpDist - helpF1) + w[2] * (helpDist - helpF1 - helpF2);
+    /*
+    //for test/debug
+    qDebug() << "point(x,y)=(" << pointCur->x << "," << pointCur->y << ")";
+    qDebug() << "helpDist=" << helpDist;
+    qDebug() << "helpF1=" << helpF1;
+    qDebug() << "helpF2=" << helpF2;
+    qDebug() << "w[0]=" << w[0] << ",w[1]=" << w[1] << ",w[2]=" << w[0];
+    qDebug() << "result=" << result;
+    */
   //  qDebug() << "pe last";
     delete v1;
     delete v2;

@@ -163,7 +163,11 @@ void WindowGUI::toClusterImg(){
     qDebug() << "Data preparing...";
     //---prepare data---
     const int k = 2;
-    const double w[] = {1/3,1/3,1/3};
+    double w[3];
+    w[0] = 1./3.;
+    w[1] = 1./3.;
+    w[2] = 1./3.;
+
     list<point*> clusters[k];
     list<point*> whitePoints;
     list<point*> blackPoints;
@@ -176,9 +180,10 @@ void WindowGUI::toClusterImg(){
     int imgW = binImg.width();
     qDebug() << "Picture height: " << imgH << "px";
     qDebug() << "Picture width: " << imgW << "px";
-    for( double h = 0 ; h < imgH ; h++ ){
-        for( double w = 0 ; w < imgW ; w++){
-            if(qGray(binImg.pixel( w , h ) == 0 )){ //black
+    for( int h = 0 ; h < imgH ; h++ ){
+        for( int w = 0 ; w < imgW ; w++){
+            //qDebug()  << "Gray(binImg.pixel( w , h )=" << qGray(binImg.pixel( w , h ));
+            if( (int)(qGray(binImg.pixel( w , h )) == 0 )){ //black
                 blackPoints.push_front( new point(h,w) );
                 blackSize++;
             }
@@ -191,7 +196,7 @@ void WindowGUI::toClusterImg(){
 
     //we expext that contect is smaller than background
     //select smaller curList:
-    if( whiteSize > blackSize ){
+    if( whiteSize < blackSize ){
         curList = &whitePoints;
         curSize = whiteSize;
     }
@@ -199,6 +204,13 @@ void WindowGUI::toClusterImg(){
         curList = &blackPoints;
         curSize = blackSize;
     }
+    /*
+    qDebug() << "blackPoints.size() = " << blackPoints.size();
+    qDebug() << "whitePoints.size() = " << whitePoints.size();
+    qDebug() << "allPoints = " << imgH * imgW;
+    qDebug() << "black + white = " << blackPoints.size() + whitePoints.size();
+    cin.get();
+    */
     qDebug() << "Finished: Data preparing";
     //---start alghoritm---
     qDebug() << "Start alghoritm";
@@ -235,7 +247,7 @@ void WindowGUI::toClusterImg(){
         clusters[clusterIndex].push_front(*listIt);
     }
     qDebug() << "Finished: Match points to the nearest cluster";
-
+    /*
     //for debug/test:
     int clSize = 0;
     for( int i = 0; i < k ; i++){
@@ -249,7 +261,7 @@ void WindowGUI::toClusterImg(){
         qDebug() << "incorrect sum of size of all clusters!";
         qDebug() << "expected (curSize):" << curSize << " actual(clSize):" << clSize;
     }
-
+    */
 
     //PROJECTIVE PART
     //(1) get average of clusters
@@ -258,13 +270,45 @@ void WindowGUI::toClusterImg(){
     Matrix<double,2,2> coverations[k];
     Matrix<double,2,2> eigenvectors[k];
     for( int i = 0 ; i < k ; i++ ){
-        qDebug() << "Getting average...";
-        avgCl[i] = ClusteringHelper::getAverage(clusters[i]);
-        qDebug() << "Getting coverations...";
-        coverations[i] = ClusteringHelper::getCovarianceMatrix(clusters[i], avgCl[i]);
-        qDebug() << "Getting eigenvalues...";
-        eigenvectors[i] = ClusteringHelper::getEigenvectors(coverations[i]);
-    }
+            qDebug() << "Getting average...";
+            avgCl[i] = ClusteringHelper::getAverage(clusters[i]);
+        }
+        for( int i = 0 ; i < k ; i++ ){
+
+            double v11 = (avgCl[i])[0];
+            qDebug() << "(avgCl[i])[0]=" << v11 ;
+            double v12 = (avgCl[i])[1];
+            qDebug() << "(avgCl[i])[1]=" << v12 ;
+
+            qDebug() << "Getting coverations...";
+            coverations[i] = ClusteringHelper::getCovarianceMatrix(clusters[i], avgCl[i]);
+        }
+        for( int i = 0 ; i < k ; i++ ){
+
+            double v11 = coverations[i](0,0);
+            qDebug() << "coverations[i](0,0)=" << v11 ;
+            double v12 = coverations[i](0,1);
+            qDebug() << "coverations[i](0,1)=" << v12 ;
+            double v21 = coverations[i](1,0);
+            qDebug() << "coverations[i](1,0)=" << v21 ;
+            double v22 = coverations[i](1,1);
+            qDebug() << "coverations[i](1,1)=" << v22 ;
+
+            qDebug() << "Getting eigenvectors...";
+            eigenvectors[i] = ClusteringHelper::getEigenvectors(coverations[i]);
+        }
+        for( int i = 0 ; i < k ; i++ ){
+
+            qDebug() << "Eigenvectors:";
+            double v11 = eigenvectors[i](0,0);
+            qDebug() << "eigenvectors[i](0,0)=" << v11 ;
+            double v12 = eigenvectors[i](0,1);
+            qDebug() << "eigenvectors[i](0,1)=" << v12 ;
+            double v21 = eigenvectors[i](1,0);
+            qDebug() << "eigenvectors[i](1,0)=" << v21 ;
+            double v22 = eigenvectors[i](1,1);
+            qDebug() << "eigenvectors[i](1,1)=" << v22 ;
+        }
     qDebug() << "Finished: Getting average, covariance matrix (and it's eigenvectors) of clusters";
     qDebug() << "Counting DIST for all points and matching to clusters...";
 
@@ -277,6 +321,10 @@ void WindowGUI::toClusterImg(){
         int clusterIndex;
         for( int i = 0 ; i < k ; i++ ){
             double dist = ClusteringHelper::dist( w, *listIt, avgCl[i], eigenvectors[i]);
+            /*
+            qDebug() << "dist=" << dist << " for i=" << i;
+            cin.get();
+            */
             if( min > dist ){
                 min = dist;
                 clusterIndex = i;
@@ -284,6 +332,19 @@ void WindowGUI::toClusterImg(){
         }
         clusters[clusterIndex].push_front(*listIt); //match point to the nearest cluster
         sumDist += min; //min = counted dist for cur point
+    }
+    //for debug/test:
+    int clSize = 0;
+    for( int i = 0; i < k ; i++){
+        qDebug() << "Cluster nr: "  << i << ", size=" << (int)clusters[i].size();
+        clSize += (int)clusters[i].size();
+    }
+    if( clSize == curSize ){
+        qDebug() << "correct sum of size of all clusters";
+    }
+    else{
+        qDebug() << "incorrect sum of size of all clusters!";
+        qDebug() << "expected (curSize):" << curSize << " actual(clSize):" << clSize;
     }
     qDebug() << "Finished: Counting DIST for all points and matching to clusters";
     double sumDistLast;
@@ -297,10 +358,39 @@ void WindowGUI::toClusterImg(){
         for( int i = 0 ; i < k ; i++ ){
             qDebug() << "Getting average...";
             avgCl[i] = ClusteringHelper::getAverage(clusters[i]);
+        }
+        for( int i = 0 ; i < k ; i++ ){
+            double v11 = (avgCl[i])[0];
+            qDebug() << "(avgCl[i])[0]=" << v11 ;
+            double v12 = (avgCl[i])[1];
+            qDebug() << "(avgCl[i])[1]=" << v12 ;
             qDebug() << "Getting coverations...";
             coverations[i] = ClusteringHelper::getCovarianceMatrix(clusters[i], avgCl[i]);
+        }
+        for( int i = 0 ; i < k ; i++ ){
+
+            double v11 = coverations[i](0,0);
+            qDebug() << "coverations[i](0,0)=" << v11 ;
+            double v12 = coverations[i](0,1);
+            qDebug() << "coverations[i](0,1)=" << v12 ;
+            double v21 = coverations[i](1,0);
+            qDebug() << "coverations[i](1,0)=" << v21 ;
+            double v22 = coverations[i](1,1);
+            qDebug() << "coverations[i](1,1)=" << v22 ;
             qDebug() << "Getting eigenvalues...";
             eigenvectors[i] = ClusteringHelper::getEigenvectors(coverations[i]);
+        }
+        for( int i = 0 ; i < k ; i++ ){
+
+            qDebug() << "Eigenvectors:";
+            double v11 = eigenvectors[i](0,0);
+            qDebug() << "eigenvectors[i](0,0)=" << v11 ;
+            double v12 = eigenvectors[i](0,1);
+            qDebug() << "eigenvectors[i](0,1)=" << v12 ;
+            double v21 = eigenvectors[i](1,0);
+            qDebug() << "eigenvectors[i](1,0)=" << v21 ;
+            double v22 = eigenvectors[i](1,1);
+            qDebug() << "eigenvectors[i](1,1)=" << v22 ;
         }
         qDebug() << "Finished: Getting average, covariance matrix (and it's eigenvectors) of clusters";
         qDebug() << "Counting DIST for all points and matching to clusters...";
@@ -322,28 +412,63 @@ void WindowGUI::toClusterImg(){
             clusters[clusterIndex].push_front(*listIt); //match point to the nearest cluster
             sumDist += min; //min = counted dist for cur point
         }
+        //for debug/test:
+        int clSize = 0;
+        for( int i = 0; i < k ; i++){
+            qDebug() << "Cluster nr: "  << i << ", size=" << (int)clusters[i].size();
+            clSize += (int)clusters[i].size();
+        }
+        if( clSize == curSize ){
+            qDebug() << "correct sum of size of all clusters";
+        }
+        else{
+            qDebug() << "incorrect sum of size of all clusters!";
+            qDebug() << "expected (curSize):" << curSize << " actual(clSize):" << clSize;
+        }
         qDebug() << "Finished: Counting DIST for all points and matching to clusters";
 
     }while( abs( sumDist - sumDistLast) > 1.0 );
     //paint picture;
-    //QImage clustImg { originImg.convertToFormat( QImage::Format_RGB32 ) };
-    QImage clustImg { binImg.convertToFormat( QImage::Format_RGB32 ) };
+    QImage clustImg { originImg.convertToFormat( QImage::Format_RGB32 ) };
+    //QImage clustImg { binImg.convertToFormat( QImage::Format_RGB32 ) };
     //now change all pixel below results to white and above to black
     qDebug() << "Painting cluster picture...";
-    for ( int i = 0; i < imgW; ++i ){
-        for ( int j = 0; j < imgH; ++j ){
-            if( i < j)
-                clustImg.setPixel( i, j, qRgb( 0, 0, 0 ) );
-            else
-                clustImg.setPixel( i, j, qRgb( 255, 255, 255 ) );
+
+    int color = 22;
+    for ( int i = 0; i < k; ++i ){
+        for( list<point*>::iterator listIt = clusters[i].begin(); listIt != clusters[i].end() ; listIt++){
+
+            int x = (*listIt)->x;
+            int y = (*listIt)->y;
+
+
+
+           clustImg.setPixel( y, x, qRgb( color, color, color ) );
+           //clustImg.setPixel( x, y, qRgb( 255, 255, 255 ) );
+           //qDebug() << "P(x,y) = ("  << x << "," << y << ")";
+           //cin.get();
+        }
+        color = color + 60;
+    }
+    /*
+    for( int h = 0 ; h < imgH ; h++ ){
+        for( int w = 0 ; w < imgW ; w++){
+            clustImg.setPixel( w, h, qRgb( 22, 22, 22 ) );
         }
     }
+    qDebug() << "imgH=" << imgH << ", imgW=" << imgW;
+    */
     imgLab->setPixmap( QPixmap::fromImage( clustImg ) );
     //cleaning:
     qDebug() << "Cleaning...";
-    while(!curList->empty()){
-        point * cur = curList->front();
-        curList->pop_front();
+    while(!blackPoints.empty()){
+        point * cur = blackPoints.front();
+        blackPoints.pop_front();
+        delete cur;
+    }
+    while(!whitePoints.empty()){
+        point * cur = whitePoints.front();
+        whitePoints.pop_front();
         delete cur;
     }
     qDebug() << "Finished: Cleaning";
