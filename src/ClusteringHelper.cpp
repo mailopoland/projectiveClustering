@@ -12,15 +12,15 @@ using namespace Eigen;
 
 using namespace std;
 
-void ClusteringHelper::findRandPoints( const unsigned int k , list<point*> * curList , const unsigned int curSize, point * randPoints[] ){
-    unsigned int randInd[k];
+void ClusteringHelper::findRandPoints( const int k , list<point*> * curList , const int curSize, point * randPoints[] ){
+    double randInd[k];
     srand(time(NULL)); //initialize random seed:
     //looking for indexes of random points:
-    for( unsigned int kIt = 0; kIt < k ; ){
-        unsigned int randTemp = rand() % curSize;
+    for( int kIt = 0; kIt < k ; ){
+        double randTemp = rand() % curSize;
         bool isExInRand = false;
         //checking that randTemp isn't exsisted in rand
-        for( unsigned int rCheck = 0 ; rCheck < kIt ; rCheck++ ){
+        for( int rCheck = 0 ; rCheck < kIt ; rCheck++ ){
             if(randInd[rCheck] == randTemp ) isExInRand = true;
         }
         if( !isExInRand ){
@@ -31,14 +31,14 @@ void ClusteringHelper::findRandPoints( const unsigned int k , list<point*> * cur
     sort (randInd, randInd + k); //for easier find correct value in list
     /*
     //for debug/test:
-    for( unsigned int i = 0; i < k ; i++){
+    for( double i = 0; i < k ; i++){
         qDebug() << "Random index number:" << i;
         qDebug() << "x:" << randInd[i];
     }
     */
     //looking for these random points
-    unsigned int indexSearch = 0;
-    unsigned int randIt = 0;
+    int indexSearch = 0;
+    int randIt = 0;
 
     for( list<point*>::iterator listIt = curList->begin(); randIt < k ; ){
         if( indexSearch == randInd[randIt] )
@@ -57,9 +57,9 @@ void ClusteringHelper::findRandPoints( const unsigned int k , list<point*> * cur
     */
 }
 double ClusteringHelper::pointsDestNormal( point * a , point * b){ //||a - b||^2
-    double a2 = pow( ( (double)(a->x) - (double)(b->x) ) , 2. );
+    double a2 = pow( ( (a->x) - (b->x) ) , 2. );
     //qDebug() << "a2=" << a2;
-    double b2 = pow( ( (double)(a->y) - (double)(b->y) ) , 2. );
+    double b2 = pow( ( (a->y) - (b->y) ) , 2. );
     //qDebug() << "b2=" << b2;
     double a2PLUSb2 = a2 + b2;
     //qDebug() << "a2PLUSb22=" << a2PLUSb2;
@@ -83,8 +83,6 @@ Matrix<double,2,1> ClusteringHelper::getAverage( list<point*> cluster){ //get av
         result(0,0) = result(0,0) / n;
         result(1,0) = result(1,0) / n;
     }
-    double t = result(0,0);
-    double t2 = result(1,0);
     return result;
 }
 
@@ -115,6 +113,48 @@ Matrix<double,2,2> ClusteringHelper::getEigenvectors( Matrix<double,2,2> covMat 
         result(1,i) = real(vectors.col(i)[1] );
     }
     return result;
+}
+double ClusteringHelper::mathFunc( point * a, point * b){ //<a,b>^2
+    return pow( ( a->x * b->y ) + (a->y * b->x) , 2 );
+}
+
+double ClusteringHelper::dist( const double w[], point * pointCur, Matrix<double,2,1> avg, Matrix<double,2,2> vectors){
+    double result = 0;
+    //point avgP ;
+   // qDebug() << "start";
+    double a1 = avg[0,0];
+   // qDebug() << "avg1=" << a1;
+    double a2 = avg[0,1];
+   // qDebug() << "avg2=" << a2;
+    point * avgP = new point( a1, a2 );
+    double v11 = vectors(0,0);
+   // qDebug() << "v11=" << v11 ;
+    double v12 = vectors(0,1);
+  //  qDebug() << "v12=" << v12 ;
+    double v21 = vectors(1,0);
+  //  qDebug() << "v21=" << v21 ;
+    double v22 = vectors(1,1);
+   // qDebug() << "v22=" << v11 ;
+    point * v1 = new point( v11, v12 );
+    point * v2 = new point( v21, v22 );
+   // qDebug() << "p2";
+    point * xMINUSm = new point ( pointCur->x - avgP->x , pointCur->y - avgP->y );
+    double helpDist = ClusteringHelper::pointsDestNormal( pointCur , avgP ); // ||point-avgP - avgP||^2
+    double helpF1 = mathFunc( xMINUSm, v1); //<point-avgP,v1>^2
+    double helpF2 = mathFunc( xMINUSm, v2); //<point-avgP,v2>^2
+    result = w[0] * helpDist + w[1] * (helpDist - helpF1) + w[2] * (helpDist - helpF1 - helpF2);
+  //  qDebug() << "pe last";
+    delete v1;
+    delete v2;
+    delete avgP;
+    delete xMINUSm;
+
+    return result;
+}
+
+void ClusteringHelper::test(){ //for me not neccessery to anything
+    point * a = new point(1,2);
+    delete a;
 }
 
 

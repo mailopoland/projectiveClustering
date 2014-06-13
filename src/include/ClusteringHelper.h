@@ -9,22 +9,25 @@ using namespace Eigen;
 
 class point{
     public:
-        point( unsigned int _x, unsigned int _y ){
+        point( double _x, double _y ){
             x = _x;
             y = _y;
         }
-        unsigned int x;
-        unsigned int y;
+        double x;
+        double y;
 };
 
 class ClusteringHelper
 {
     public:
-        static void findRandPoints( const unsigned int k , list<point*> * curList , const unsigned int curSize, point * randPoints[] );
+        static void findRandPoints( const int k , list<point*> * curList , const int curSize, point * randPoints[] );
         static double pointsDestNormal( point * a , point * b);
         static Matrix<double,2,1> getAverage( list<point*> cluster); //get average of cluster
         static Matrix<double,2,2> getCovarianceMatrix( list<point*> cluster, Matrix<double,2,1> avg );
         static Matrix<double,2,2> getEigenvectors( Matrix<double,2,2> covMat );
+        static double dist( const double w[], point * point, Matrix<double,2,1> avg, Matrix<double,2,2> vectors);
+        static double mathFunc( point * a, point * b);
+        static void test();
     protected:
     private:
 };
